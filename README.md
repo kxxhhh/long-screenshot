@@ -1,159 +1,263 @@
+<div align="center">
+
 # LongScreenshot
 
-Android 滚动长截图工具，支持截取任意 App 的长图（跨进程）。
+**Android cross-process scrolling screenshot tool**
+
+截取任意 App 的全页长图，无需 root 也可使用
 
 [![API](https://img.shields.io/badge/API-24%2B-brightgreen.svg)](https://android-arsenal.com/api?level=24)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Android-orange.svg)]()
 
-[English](#english) | 中文
+[中文](#中文) · [English](#english)
+
+</div>
 
 ---
 
-## 功能特性
+## 中文
 
-- **跨进程截图**：截取任意 App 界面，而不仅限于自身
-- **三套方案自动切换**：根据设备权限自动选择最优方案
-- **实时预览**：截图过程中实时拼接预览
-- **自动保存**：截图完成后自动保存到相册
+### 这是什么
 
-## 方案说明
+大多数 App 的长截图功能只能截自己的界面（直接 `view.draw(canvas)`）。
 
-| 方案 | 截图 API | 滑动 API | 前置条件 | 用户成本 |
-|------|---------|---------|---------|---------|
-| **Shizuku** | `SurfaceControl.screenshot()` | `IInputManager.injectInputEvent()` | 安装 Shizuku，执行一次 adb 或无线调试授权 | 低 |
-| **Root** | `su -c screencap` | AccessibilityService | 设备已 root | 低 |
-| **MediaProjection** | `MediaProjection` + `VirtualDisplay` | AccessibilityService | 同意屏幕录制弹窗 + 开启无障碍服务 | 中 |
+**LongScreenshot 做的事不同**：通过系统级 API 拿到设备像素，再模拟滑动手势，把每一帧拼接成完整长图——**可以截任意 App，包括其他进程**。
 
-优先级：`SHIZUKU > ROOT > MEDIA_PROJECTION`，启动时自动检测。
+### 三套方案
 
-## 架构设计
+App 启动时自动检测设备环境，按优先级选择最优方案：
+
+| 优先级 | 方案 | 截图实现 | 滑动实现 | 前置条件 |
+|:---:|------|---------|---------|---------|
+| 1 | **Shizuku** | `SurfaceControl.screenshot()` 反射 | `IInputManager.injectInputEvent()` 反射 | 安装 Shizuku + 一次授权 |
+| 2 | **Root** | `su -c screencap` | AccessibilityService 手势 | 设备已 root |
+| 3 | **MediaProjection** | `MediaProjection` + `VirtualDisplay` | AccessibilityService 手势 | 同意录屏弹窗 + 开启无障碍 |
+
+> **为什么 MediaProjection 方案需要无障碍？**
+> MediaProjection 解决了"截图"问题，但普通 App 没有注入系统级滑动事件的权限。
+> AccessibilityService 是目前 Android 上唯一对普通应用开放的手势注入接口。
+> 微信、截图猫等工具的长截图功能均采用此方案。
+
+### 架构设计
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  MainActivity                    │
-│           (Composition Root / Facade)            │
-└──────────────────────┬──────────────────────────┘
-                       │ DI 组装
-         ┌─────────────┼─────────────┐
-         ▼             ▼             ▼
-   IPermission   IScreenCapture  IScrollController
-   Provider      ────────────    ────────────────
-   (Proxy)       SurfaceControl  InputManager
-                 MediaProjection Accessibility
-                 RootCapture
-         │             │             │
-         └─────────────┼─────────────┘
-                       ▼
-             ScrollCaptureOrchestrator
-             (Observer: ScrollCallback)
-                       │
-              ┌────────┴────────┐
-              ▼                 ▼
-        IFrameComposer    IPreviewRenderer
-        (SRP: Store +     (Observer: UI)
-         Composer 分离)
+┌──────────────────────────────────────────────────────┐
+│                    MainActivity                       │
+│              Composition Root · Facade               │
+└────────────────────────┬─────────────────────────────┘
+                         │ constructor injection
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+  IPermissionProvider  IScreenCapture  IScrollController
+  ─────────────────    ──────────────  ─────────────────
+  ShizukuProvider  →   SurfaceControl  InputManager
+  (null for others)    MediaProjection Accessibility
+                       RootCapture
+          │              │              │
+          └──────────────┼──────────────┘
+                         ▼
+            ScrollCaptureOrchestratorImpl
+                  Observer pattern
+              (ScrollCallback driven)
+                         │
+               ┌─────────┴─────────┐
+               ▼                   ▼
+         IFrameComposer       IPreviewRenderer
+         ┌────┬────────┐      real-time UI update
+         │    │        │
+      Store  Composer  SRP separation
 ```
 
-**设计模式：**
-- **Strategy**：`IScreenCapture` / `IScrollController` 三套实现可自由切换
-- **Proxy**：`ShizukuPermissionProvider` 隐藏 Shizuku 细节，对外统一 `IPermissionProvider`
-- **Observer**：`ScrollCallback` / `OrchestratorCallback` 解耦滚动与截图时序
-- **Facade**：`ScrollCaptureOrchestratorImpl` 对外只暴露 `start/stop`
-- **DI**：`MainActivity` 作为 Composition Root，构造器注入所有依赖
+**设计模式对应关系：**
 
-## 模块结构
+| 模式 | 应用位置 | 作用 |
+|------|---------|------|
+| **Strategy** | `IScreenCapture` / `IScrollController` | 三套实现运行时可互换 |
+| **Proxy** | `ShizukuPermissionProvider` | 对外隐藏 Shizuku 细节，统一 `IPermissionProvider` 接口 |
+| **Observer** | `ScrollCallback` / `OrchestratorCallback` | 解耦滚动节奏与截图时序 |
+| **Facade** | `ScrollCaptureOrchestratorImpl` | 对外只暴露 `start(request)` / `stop()` |
+| **DI** | `MainActivity` | Composition Root，构造器注入所有依赖，无框架 |
+| **SRP** | `FrameStoreImpl` + `FrameComposerImpl` | 数据存储与业务合成职责分离 |
+
+### 模块结构
 
 ```
 app/src/main/java/com/wanjian/longscreenshot/
-├── permission/          # 权限代理层（Shizuku / 无需权限）
-├── capture/             # 截图策略层（SurfaceControl / MediaProjection / Root）
-├── scroll/              # 滑动控制层（IInputManager / AccessibilityService）
-├── compose/             # 帧合成层（FrameStore + FrameComposer，SRP 分离）
-├── render/              # 渲染层（预览 + 保存）
-├── orchestrator/        # 调度层（Facade 协调以上所有模块）
-├── CaptureStrategy.java # 方案枚举
-├── StrategySelector.java# 自动检测最优方案
-└── MainActivity.java    # Composition Root
+│
+├── permission/                   # 权限代理层
+│   ├── IPermissionProvider.java  # 接口：request / isGranted / getSystemService
+│   ├── ShizukuPermissionProvider # Shizuku 实现，IBinder 包装
+│   └── PermissionCallback.java
+│
+├── capture/                      # 截图策略层
+│   ├── IScreenCapture.java       # 接口：capture / setInsets / release
+│   ├── SurfaceControlCapture     # Shizuku 方案：反射 SurfaceControl
+│   ├── MediaProjectionCapture    # 普通方案：VirtualDisplay + ImageReader
+│   ├── MediaProjectionService    # 前台服务（Android 10+ 要求）
+│   └── RootCapture               # Root 方案：su + screencap
+│
+├── scroll/                       # 滑动控制层
+│   ├── IScrollController.java    # 接口：start / stop / isScrolling
+│   ├── InputManagerScrollController   # Shizuku：IInputManager 反射注入
+│   ├── AccessibilityScrollController  # 普通：GestureDescription 手势
+│   └── LongScrollAccessibilityService # 无障碍服务实体
+│
+├── compose/                      # 帧合成层（SRP 分离）
+│   ├── IFrameStore / FrameStoreImpl   # 帧数据存储
+│   └── IFrameComposer / FrameComposerImpl  # 裁剪重叠、Canvas 拼接、RGB_565
+│
+├── render/                       # 渲染层
+│   ├── PreviewRendererImpl       # 实时预览回调
+│   └── ResultRendererImpl        # 保存 PNG 到相册，MediaScanner 通知
+│
+├── orchestrator/                 # 调度层（Facade）
+│   └── ScrollCaptureOrchestratorImpl  # 协调所有模块时序
+│
+├── CaptureStrategy.java          # 枚举：SHIZUKU / ROOT / MEDIA_PROJECTION
+├── StrategySelector.java         # 自动检测最优方案
+└── MainActivity.java             # Composition Root
 ```
 
-## 快速开始
+### 快速开始
 
-### 方案一：Shizuku（推荐）
+**方案一：Shizuku（推荐，体验最佳）**
 
-1. 从 [Play Store](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) 或 [GitHub](https://github.com/RikkaApps/Shizuku/releases) 安装 Shizuku
-2. Android 11+ 手机：开发者选项 → 无线调试 → 打开 Shizuku → 通过无线调试启动
-3. 安装本应用，打开后授权 Shizuku，直接点"开始截图"
+```
+1. 安装 Shizuku：https://github.com/RikkaApps/Shizuku/releases
+2. Android 11+：开发者选项 → 无线调试 → 打开 Shizuku App → 通过无线调试启动
+   Android 10-：需连接电脑执行一次 adb 命令（Shizuku App 内有说明）
+3. 安装本 App → 授权 Shizuku → 点"开始截图"
+```
 
-### 方案二：MediaProjection（普通用户）
+**方案二：MediaProjection（无需安装额外软件）**
 
-1. 安装本应用
-2. 打开应用，按引导开启无障碍服务（设置 → 无障碍 → LongScreenshot）
-3. 点"开始截图"，同意屏幕录制弹窗
+```
+1. 安装本 App
+2. 首次打开：按引导前往 设置 → 无障碍 → LongScreenshot → 开启
+3. 点"开始截图" → 同意录屏弹窗 → 开始滚动截图
+```
 
-## 编译
+### 编译运行
 
 ```bash
 git clone https://github.com/wellorbetter/long-screenshot.git
 cd long-screenshot
 ./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
+# 输出：app/build/outputs/apk/debug/app-debug.apk
 ```
 
-**环境要求：**
-- Android Studio Hedgehog+
-- JDK 17
-- Android SDK 34
+**环境要求**
 
-## 依赖
+| 工具 | 版本 |
+|------|------|
+| Android Studio | Hedgehog (2023.1.1)+ |
+| JDK | 17 |
+| compileSdk | 34 |
+| minSdk | 24 (Android 7.0) |
+| AGP | 8.2.2 |
+| Gradle | 8.2 |
+
+### 核心依赖
 
 ```groovy
+// Shizuku：adb 权限桥接
 implementation 'dev.rikka.shizuku:api:13.1.5'
 implementation 'dev.rikka.shizuku:provider:13.1.5'
+
+// AndroidX
 implementation 'androidx.appcompat:appcompat:1.6.1'
+implementation 'androidx.core:core:1.12.0'
 ```
 
-## 已知限制
+### 帧合成原理
 
-- Shizuku 方案：`SurfaceControl.screenshot()` 为系统隐藏 API，通过反射调用，未来系统版本可能失效
-- Root 方案：`screencap` 命令在部分定制 ROM 路径不同
-- MediaProjection 方案：Android 10+ 需前台服务；无障碍服务为系统要求，无法绕过
+```
+第 N 帧截图（高度 frameH）
+滚动了 stepPx 像素
 
-## License
+overlap = frameH - stepPx   ← 与上一帧重叠的像素行数
+cropY   = overlap            ← 从这里开始才是新内容
+新内容高度 = frameH - overlap
+
+Canvas.drawBitmap(croppedFrame, 0, currentOffsetY, paint)
+currentOffsetY += 新内容高度
+```
+
+内存优化：使用 `RGB_565`（比 `ARGB_8888` 节省 50% 内存），中间帧合成后立即 `recycle()`。
+
+### 已知限制
+
+- `SurfaceControl.screenshot()` 为隐藏 API，通过反射调用，AOSP 版本升级可能失效
+- `screencap` 在部分深度定制 ROM 上路径或行为不同
+- MediaProjection 方案在 Android 10+ 强制要求前台服务，会显示通知栏图标
+- 无障碍服务为 Android 系统设计约束，普通 App 无法绕过
+
+### License
 
 ```
 Copyright 2024 wellorbetter
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
+Licensed under the Apache License, Version 2.0
+http://www.apache.org/licenses/LICENSE-2.0
 ```
 
 ---
 
 ## English
 
-### Overview
+### What is this
 
-LongScreenshot is an Android tool for capturing full-page scrolling screenshots across any app (cross-process).
+Most "long screenshot" features in Android apps only capture their **own** UI by calling `view.draw(canvas)` — no special permissions needed, but limited to self.
 
-### Three Capture Strategies
+**LongScreenshot works differently**: it uses system-level APIs to capture raw screen pixels and injects scroll gestures to stitch frames into a complete long image — **works across any app, any process**.
 
-| Strategy | Screenshot | Scroll Injection | Requirement |
-|----------|-----------|-----------------|-------------|
-| **Shizuku** | `SurfaceControl.screenshot()` via reflection | `IInputManager.injectInputEvent()` via reflection | Shizuku installed & authorized |
-| **Root** | `su -c screencap` | AccessibilityService | Rooted device |
-| **MediaProjection** | `MediaProjection` + `VirtualDisplay` | AccessibilityService | Screen record permission + Accessibility enabled |
+### Three Strategies
 
-Auto-detection priority: `SHIZUKU > ROOT > MEDIA_PROJECTION`
+Auto-detected at launch, highest priority wins:
+
+| Priority | Strategy | Screenshot | Scroll Injection | Requirement |
+|:---:|----------|-----------|-----------------|-------------|
+| 1 | **Shizuku** | `SurfaceControl.screenshot()` via reflection | `IInputManager.injectInputEvent()` via reflection | Shizuku installed + one-time authorization |
+| 2 | **Root** | `su -c screencap` | AccessibilityService gesture | Rooted device |
+| 3 | **MediaProjection** | `MediaProjection` + `VirtualDisplay` | AccessibilityService gesture | Screen record consent + Accessibility enabled |
+
+> **Why does MediaProjection need Accessibility?**
+> MediaProjection solves the "screenshot" part but grants no permission to inject touch events into other apps.
+> `AccessibilityService` is the only gesture injection interface Android exposes to regular apps.
+> This is the same approach used by WeChat, screenshot tools, etc.
+
+### Architecture
+
+Follows **Strategy + Proxy + Observer + Facade + DI** patterns.
+See the 架构设计 section above for the full diagram.
 
 ### Build
 
 ```bash
+git clone https://github.com/wellorbetter/long-screenshot.git
+cd long-screenshot
 ./gradlew assembleDebug
 ```
 
-### Architecture
+### Frame Stitching
 
-Follows Strategy + Proxy + Observer + Facade + DI patterns. See 架构设计 section above for diagram.
+```
+Frame N height = frameH, scroll step = stepPx
+overlap  = frameH - stepPx   ← rows shared with previous frame
+cropY    = overlap            ← start of new content
+new rows = frameH - overlap
+
+drawBitmap(croppedFrame, offsetY)
+offsetY += new rows
+```
+
+Memory: `RGB_565` config (50% less than `ARGB_8888`), intermediate bitmaps recycled immediately.
+
+### Known Limitations
+
+- `SurfaceControl.screenshot()` is a hidden API accessed via reflection — may break on future AOSP versions
+- `screencap` path/behavior may differ on heavily customized ROMs
+- Android 10+ requires a foreground service for MediaProjection (notification icon shown)
+- AccessibilityService requirement is an Android platform constraint, not bypassable for regular apps
