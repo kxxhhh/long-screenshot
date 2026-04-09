@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">LongScreenshot 需要无障碍服务权限以模拟滑动手势，用于自动滚动截取长图。本服务不收集任何隐私数据。</string>
+    <string name="app_name">LongScreenshot</string>
+</resources>

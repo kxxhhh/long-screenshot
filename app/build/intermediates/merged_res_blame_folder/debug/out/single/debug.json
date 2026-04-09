@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "I:\\.gradle\\daemon\\8.2\\com.wanjian.longscreenshot.app-merged_res-20:\\xml_accessibility_service_config.xml.flat",
+        "source": "I:\\.gradle\\daemon\\8.2\\com.wanjian.longscreenshot.app-main-22:\\xml\\accessibility_service_config.xml"
+    },
+    {
+        "merged": "I:\\.gradle\\daemon\\8.2\\com.wanjian.longscreenshot.app-merged_res-20:\\layout_activity_main.xml.flat",
+        "source": "I:\\.gradle\\daemon\\8.2\\com.wanjian.longscreenshot.app-main-22:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.wanjian.longscreenshot.app-merged_res-20:/layout_activity_main.xml.flat",
+        "source": "com.wanjian.longscreenshot.app-main-22:/layout/activity_main.xml"
+    }
+]
