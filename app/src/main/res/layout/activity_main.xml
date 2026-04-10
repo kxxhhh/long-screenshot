@@ -1,109 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fitsSystemWindows="true">
 
-    <!-- 无障碍服务引导卡片（未开启时显示） -->
-    <LinearLayout
-        android:id="@+id/cardAccessibility"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="LongScreenshot"
+            app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="#FFF3E0"
         android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:visibility="gone">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <TextView
+        <!-- 方案状态 Chip -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/tvStrategy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="检测方案中…"
+            android:checkable="false"
+            app:chipIcon="@android:drawable/ic_menu_info_details"
+            app:chipBackgroundColor="?attr/colorSecondaryContainer"
+            android:textColor="?attr/colorOnSecondaryContainer"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 无障碍引导卡片 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAccessibility"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="⚠️ 需要开启无障碍服务"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#E65100" />
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="?attr/colorErrorContainer">
 
-        <TextView
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="⚠️ 需要开启无障碍服务"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    android:textColor="?attr/colorError" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="长截图需要模拟滑动手势，这是 Android 系统对普通应用的唯一授权方式。\n\n本服务仅用于注入滑动手势，不监听您的任何输入内容和隐私数据。"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:lineSpacingMultiplier="1.4" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="开启步骤："
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="1. 点击下方按钮，跳转到系统无障碍设置\n2. 找到「LongScreenshot」\n3. 点击开启 → 确认允许\n4. 返回本应用即可使用"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:lineSpacingMultiplier="1.5" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGoAccessibility"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="前往开启无障碍服务"
+                    app:icon="@android:drawable/ic_menu_manage"
+                    app:iconGravity="textStart"
+                    style="@style/Widget.Material3.Button.TonalButton" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 操作按钮行 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="长截图需要模拟滑动手势，这是 Android 系统对普通应用的唯一授权方式。\n\n本服务仅用于注入滑动手势，不监听您的任何输入内容和隐私数据。"
-            android:textSize="14sp"
-            android:textColor="#5D4037"
-            android:lineSpacingMultiplier="1.4"/>
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="开启步骤："
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#5D4037"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStart"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="开始截图"
+                app:icon="@android:drawable/ic_menu_camera"
+                app:iconGravity="textStart"
+                app:cornerRadius="16dp"
+                style="@style/Widget.Material3.Button" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="1. 点击下方按钮，跳转到系统无障碍设置\n2. 找到「LongScreenshot」\n3. 点击开启 → 确认允许\n4. 返回本应用即可使用"
-            android:textSize="13sp"
-            android:textColor="#5D4037"
-            android:lineSpacingMultiplier="1.5"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="停止"
+                app:icon="@android:drawable/ic_media_pause"
+                app:iconGravity="textStart"
+                app:cornerRadius="16dp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
 
-        <Button
-            android:id="@+id/btnGoAccessibility"
+        </LinearLayout>
+
+        <!-- 预览区域 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="前往开启无障碍服务"
-            android:backgroundTint="#FF6D00"
-            android:textColor="#FFFFFF" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter" />
+
+                <!-- 空状态提示 -->
+                <TextView
+                    android:id="@+id/tvEmptyHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="点击「开始截图」预览将在此显示"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+            </FrameLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
-    <!-- 当前方案状态栏 -->
-    <TextView
-        android:id="@+id/tvStrategy"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:textSize="13sp"
-        android:textColor="#666666"
-        android:text="检测方案中..." />
-
-    <!-- 操作按钮行 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <Button
-            android:id="@+id/btnStart"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="开始截图"
-            android:layout_marginEnd="4dp"/>
-
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="停止"
-            android:layout_marginStart="4dp"/>
-
-    </LinearLayout>
-
-    <!-- 预览区域 -->
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:scaleType="fitCenter"
-        android:background="#F5F5F5" />
-
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

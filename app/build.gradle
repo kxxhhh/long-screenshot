@@ -1,9 +1,9 @@
 plugins { id 'com.android.application' }
 android {
-    namespace "com.wanjian.longscreenshot"
+    namespace "com.wellorbetter.longscreenshot"
     compileSdk 34
     defaultConfig {
-        applicationId "com.wanjian.longscreenshot"
+        applicationId "com.wellorbetter.longscreenshot"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -22,4 +22,6 @@ dependencies {
     implementation 'dev.rikka.shizuku:provider:13.1.5'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.12.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
 }

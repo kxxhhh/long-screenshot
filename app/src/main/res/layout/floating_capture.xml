@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <!-- 单个按钮，点击切换状态 -->
+    <ImageButton
+        android:id="@+id/fabToggle"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@android:drawable/ic_media_play"
+        android:contentDescription="开始截图"
+        android:background="@drawable/fab_bg_green"
+        android:scaleType="centerInside"
+        android:elevation="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</FrameLayout>

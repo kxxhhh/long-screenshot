@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Teal-based Material 3 color scheme -->
+    <color name="md_theme_primary">#006B5E</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#7CF8DE</color>
+    <color name="md_theme_onPrimaryContainer">#00201B</color>
+    <color name="md_theme_secondary">#4B635C</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#CDE8DF</color>
+    <color name="md_theme_onSecondaryContainer">#07201A</color>
+    <color name="md_theme_tertiary">#416278</color>
+    <color name="md_theme_onTertiary">#FFFFFF</color>
+    <color name="md_theme_error">#BA1A1A</color>
+    <color name="md_theme_onError">#FFFFFF</color>
+    <color name="md_theme_errorContainer">#FFDAD6</color>
+    <color name="md_theme_surface">#FAFDFB</color>
+    <color name="md_theme_onSurface">#191C1B</color>
+    <color name="md_theme_surfaceVariant">#DBE5E0</color>
+    <color name="md_theme_onSurfaceVariant">#3F4945</color>
+    <color name="md_theme_outline">#6F7975</color>
+</resources>

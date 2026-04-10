@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash screen center icon: simplified screenshot symbol -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <!-- Phone outline -->
+    <path
+        android:fillColor="#006B5E"
+        android:pathData="M100,44 L188,44 C193.5,44 198,48.5 198,54 L198,234 C198,239.5 193.5,244 188,244 L100,244 C94.5,244 90,239.5 90,234 L90,54 C90,48.5 94.5,44 100,44 Z" />
+
+    <!-- Screen -->
+    <path
+        android:fillColor="#7CF8DE"
+        android:pathData="M100,60 L188,60 L188,228 L100,228 Z" />
+
+    <!-- Content lines -->
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,82 L176,82" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,98 L164,98" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,114 L176,114" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,130 L156,130" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,146 L176,146" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,162 L168,162" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,178 L176,178" />
+    <path android:strokeColor="#006B5E" android:strokeWidth="4"
+        android:pathData="M112,194 L160,194" />
+
+    <!-- Scroll down arrow -->
+    <path
+        android:fillColor="#006B5E"
+        android:pathData="M144,210 L134,198 L140,198 L140,186 L148,186 L148,198 L154,198 Z" />
+
+</vector>
