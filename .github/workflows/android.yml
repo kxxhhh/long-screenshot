@@ -33,7 +33,7 @@ jobs:
           fi
 
           if [ ! -x "$SDKMANAGER" ]; then
-            echo "sdkmanager not found at expected paths"
+            echo "sdkmanager not found"
             ls -R "$ANDROID_HOME" || true
             exit 1
           fi
