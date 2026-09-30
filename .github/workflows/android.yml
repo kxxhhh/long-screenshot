@@ -1,20 +1,47 @@
-- name: Install Android SDK
-  shell: bash
-  run: |
-    set -eux
+name: Android CI
 
-    mkdir -p "$ANDROID_HOME"
-    mkdir -p "$ANDROID_HOME/cmdline-tools"
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
 
-    cd /tmp
-    curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-    unzip -q -o cmdline-tools.zip -d "$ANDROID_HOME/cmdline-tools"
-    rm -rf "$ANDROID_HOME/cmdline-tools/latest"
-    mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null || true
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-    "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --install \
-      "platform-tools" \
-      "platforms;android-34" \
-      "build-tools;34.0.0"
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Check Android environment
+        run: |
+          java -version
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls -la "$ANDROID_HOME"
+          ls -la "$ANDROID_HOME/platforms" || true
+          ls -la "$ANDROID_HOME/build-tools" || true
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Build debug APK
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: long-screenshot-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
